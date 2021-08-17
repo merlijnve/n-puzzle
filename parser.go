@@ -44,7 +44,7 @@ func create_number_slice(lines []string, n int) []int {
 	return numbers
 }
 
-func check_numbers(numbers []int, n int) {
+func check_numbers(numbers []int) {
 	copiedNumbers := make([]int, len(numbers))
 	copy(copiedNumbers, numbers)
 
@@ -59,7 +59,7 @@ func check_numbers(numbers []int, n int) {
 
 }
 
-func parser(filename string) ([]int, int) {
+func parser(filename string) ([]int, int, []point) {
 	lines := []string{}
 
 	file, err := os.Open(filename) // open file
@@ -74,6 +74,7 @@ func parser(filename string) ([]int, int) {
 	n, err := strconv.Atoi(lines[0]) // get n (width/height of puzzle)
 	check(err)
 	numbers := create_number_slice(lines[1:], n) // create slice with all numbers
-	check_numbers(numbers, n)
-	return numbers, n
+	check_numbers(numbers)
+
+	return numbers, n, create_goal_map(n)
 }

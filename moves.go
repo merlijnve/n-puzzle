@@ -1,13 +1,14 @@
 package main
 
-// Returns either nil or a set of numbers with up movement made
+// Iterates through numbers,
+//
 func up(numbers []int, n int) []int {
 	lookup := lookup_point(n)
 
 	for i := range numbers {
 		if numbers[i] == 0 {
 			p_current := lookup(i)
-			if p_current.y == n {
+			if p_current.y == n-1 {
 				return nil
 			} else {
 				copiedNumbers := make([]int, len(numbers))
@@ -49,7 +50,7 @@ func left(numbers []int, n int) []int {
 	for i := range numbers {
 		if numbers[i] == 0 {
 			p_current := lookup(i)
-			if p_current.x == n {
+			if p_current.x == n-1 {
 				return nil
 			} else {
 				copiedNumbers := make([]int, len(numbers))

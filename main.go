@@ -24,6 +24,8 @@ func check(err error) {
 
 func main() {
 	argsWithoutProg := os.Args[1:]
+	heur := 0
+	var heurFunc func([]int, int, []point) int
 
 	if len(argsWithoutProg) != 1 {
 		if len(argsWithoutProg) == 0 {
@@ -31,16 +33,33 @@ func main() {
 		} else {
 			check(errors.New("Please give only 1 filename as argument"))
 		}
+	} else {
+		for heur != 1 && heur != 2 && heur != 3 && heur != 4 {
+			fmt.Println("Select a heuristic function & press enter:")
+			fmt.Println("[1] Manhattan Distance")
+			fmt.Println("[2] Hamming Distance")
+			fmt.Println("[3] Manhattan Distance + Linear Confict")
+			fmt.Scanf("%v", &heur)
+			if heur != 1 && heur != 2 && heur != 3 {
+				fmt.Println("That's not an option")
+			}
+		}
 	}
-	numbers, n := parser(os.Args[1])
+	switch heur {
+	case 1:
+		heurFunc = manhattan_distance
+	case 2:
+		heurFunc = hamming_distance
+	case 3:
+		heurFunc = md_linear_conflict
+	case 4:
+		heurFunc = all_combined
+	}
+	numbers, n, goal := parser(os.Args[1])
 
-	numbers = up(numbers, n)
-	numbers = down(numbers, n)
-	numbers = left(numbers, n)
-	numbers = right(numbers, n)
-
-	printpuzzle(numbers, n)
-	fmt.Println("Manhattan: ", manhattan_distance(numbers, n))
-	fmt.Println("Hamming: ", hamming_distance(numbers, n))
-	fmt.Println("Manhattan + Linear Conflict: ", md_linear_conflict(numbers, n))
+	astar(numbers, n, heurFunc, goal)
+	// printpuzzle(numbers, n)
+	// fmt.Println("Manhattan: ", manhattan_distance(numbers, n, goal))
+	// fmt.Println("Hamming: ", hamming_distance(numbers, n, goal))
+	// fmt.Println("Manhattan + Linear Conflict: ", md_linear_conflict(numbers, n, goal))
 }

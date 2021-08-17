@@ -77,10 +77,9 @@ func calculate_coordinate(i int, n int) point {
 // Calculate sum of manhattan distances for puzzle with n^2 - 1 tiles
 //
 // (x2 - x1) + (y2 - y1)
-func manhattan_distance(numbers []int, n int) int {
+func manhattan_distance(numbers []int, n int, goal []point) int {
 	sum := 0
 
-	goal := create_goal_map(n)
 	for i := range numbers {
 		if numbers[i] != 0 {
 			p_current := calculate_coordinate(i, n)
@@ -97,10 +96,9 @@ func manhattan_distance(numbers []int, n int) int {
 }
 
 // Calculates how many tiles of puzzle are not in the correct position
-func hamming_distance(numbers []int, n int) int {
+func hamming_distance(numbers []int, n int, goal []point) int {
 	sum := 0
 
-	goal := create_goal_map(n)
 	for i := range numbers {
 		p_current := calculate_coordinate(i, n)
 		p_goal := goal[numbers[i]]
@@ -114,7 +112,7 @@ func hamming_distance(numbers []int, n int) int {
 // Calculates manhattan distance heuristic,
 // procedes to iterate snail-wise through the numbers,
 // adds 2 to sum every time a linear conflict is found
-func md_linear_conflict(numbers []int, n int) int {
+func md_linear_conflict(numbers []int, n int, goal []point) int {
 	sum := 0
 
 	top := 0
@@ -124,12 +122,12 @@ func md_linear_conflict(numbers []int, n int) int {
 
 	tmp := 0
 	dir := 1
-	sum = manhattan_distance(numbers, n)
+	sum = manhattan_distance(numbers, n, goal)
 	for top <= bottom && left <= right {
 		if dir == 1 {
 			for i := left; i <= right; i += 1 { // left to right -->
 				if n*top+i > 0 {
-					if tmp > numbers[n*top+i] && numbers[n*top+i] != 0 {
+					if tmp == numbers[n*top+i]+1 && numbers[n*top+i] != 0 {
 						sum += 2
 					}
 				}
@@ -140,7 +138,7 @@ func md_linear_conflict(numbers []int, n int) int {
 		} else if dir == 2 {
 			for i := top; i <= bottom; i += 1 { // top to bottom ˅˅˅˅˅˅
 				if n*i+right > 0 {
-					if tmp > numbers[n*i+right] && numbers[n*i+right] != 0 {
+					if tmp == numbers[n*i+right]+1 && numbers[n*i+right] != 0 {
 						sum += 2
 					}
 				}
@@ -151,7 +149,7 @@ func md_linear_conflict(numbers []int, n int) int {
 		} else if dir == 3 {
 			for i := right; i >= left; i -= 1 { // right to left <--
 				if n*bottom+i > 0 {
-					if tmp > numbers[n*bottom+i] && numbers[n*bottom+i] != 0 {
+					if tmp == numbers[n*bottom+i]+1 && numbers[n*bottom+i] != 0 {
 						sum += 2
 					}
 				}
@@ -162,7 +160,7 @@ func md_linear_conflict(numbers []int, n int) int {
 		} else if dir == 4 {
 			for i := bottom; i >= top; i -= 1 { // bottom to top ᐱ
 				if n*bottom+i > 0 {
-					if tmp > numbers[n*i+left] && numbers[n*i+left] != 0 {
+					if tmp == numbers[n*i+left]+1 && numbers[n*i+left] != 0 {
 						sum += 2
 					}
 				}
@@ -172,5 +170,11 @@ func md_linear_conflict(numbers []int, n int) int {
 			dir = 1
 		}
 	}
+	return sum
+}
+
+func all_combined(numbers []int, n int, goal []point) int {
+
+	sum := md_linear_conflict(numbers, n, goal) + hamming_distance(numbers, n, goal)
 	return sum
 }
