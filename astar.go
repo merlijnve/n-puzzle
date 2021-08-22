@@ -9,6 +9,7 @@ type node struct {
 	toStart   int
 	total     int
 	state     []int
+	move      string
 	parent    *node
 }
 
@@ -47,28 +48,28 @@ func get_successors(current node, n int, heur func([]int, int, []point) int, goa
 	if upState != nil {
 		heurVal := heur(upState, n, goal)
 		toStart := calc_to_start(current)
-		successors = append(successors, node{heurVal, toStart, heurVal + toStart, upState, &current})
+		successors = append(successors, node{heurVal, toStart, heurVal + toStart, upState, "UP", &current})
 	}
 
 	downState := down(current.state, n)
 	if downState != nil {
 		heurVal := heur(downState, n, goal)
 		toStart := calc_to_start(current)
-		successors = append(successors, node{heurVal, toStart, heurVal + toStart, downState, &current})
+		successors = append(successors, node{heurVal, toStart, heurVal + toStart, downState, "DOWN", &current})
 	}
 
 	leftState := left(current.state, n)
 	if leftState != nil {
 		heurVal := heur(leftState, n, goal)
 		toStart := calc_to_start(current)
-		successors = append(successors, node{heurVal, toStart, heurVal + toStart, leftState, &current})
+		successors = append(successors, node{heurVal, toStart, heurVal + toStart, leftState, "LEFT", &current})
 	}
 
 	rightState := right(current.state, n)
 	if rightState != nil {
 		heurVal := heur(rightState, n, goal)
 		toStart := calc_to_start(current)
-		successors = append(successors, node{heurVal, toStart, heurVal + toStart, rightState, &current})
+		successors = append(successors, node{heurVal, toStart, heurVal + toStart, rightState, "RIGHT", &current})
 	}
 
 	return successors
@@ -115,20 +116,37 @@ func printNode(current node) {
 	fmt.Println("--------------")
 }
 
+func recursive_print_moves(n node, moves int) {
+	if n.parent != nil {
+		moves--
+		recursive_print_moves(*n.parent, moves)
+		fmt.Println(moves, n.move)
+	}
+}
+
 func astar(numbers []int, n int, heur func([]int, int, []point) int, goal []point) {
 	open := []node{}
 	closed := []node{}
 	node_current := node{}
+	time_complexity := 0
+	size_complexity := 0
+	solution_moves := 0
 
-	node_goal := node{0, 0, 0, get_goal_state(goal, n), nil}
+	node_goal := node{0, 0, 0, get_goal_state(goal, n), "", nil}
 	heur_value := heur(numbers, n, goal)
-	node_start := node{heur_value, 0, heur_value + 0, numbers, nil}
+	node_start := node{heur_value, 0, heur_value + 0, numbers, "", nil}
 	open = append(open, node_start)
 	for i := 0; len(open) > 0; i++ {
 		// fmt.Println("FINDING LOWEST OF OPEN: ", len(open))
 		open, closed, node_current = move_lowest_to_closed(open, closed)
+		time_complexity++
 		if compare_states(node_current.state, node_goal.state) == true {
 			fmt.Println("Reached solved state")
+			solution_moves = node_current.toStart
+			fmt.Println("Time complexity (nodes selected in open):", time_complexity)
+			fmt.Println("Size complexity (nodes saved in memory):", size_complexity)
+			fmt.Println("Moves to solution:", solution_moves)
+			recursive_print_moves(node_current, solution_moves+1)
 			return
 		} else {
 			successors := get_successors(node_current, n, heur, goal)
@@ -140,7 +158,9 @@ func astar(numbers []int, n int, heur func([]int, int, []point) int, goal []poin
 				}
 			}
 		}
-		fmt.Println("END LOOP OPEN & I ", len(open), i)
+		if len(open) > size_complexity {
+			size_complexity = len(open)
+		}
 	}
 	fmt.Println("Could not solve")
 	return

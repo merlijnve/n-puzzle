@@ -92,7 +92,6 @@ func manhattan_distance(numbers []int, n int, goal []point) int {
 		}
 	}
 	return sum
-
 }
 
 // Calculates how many tiles of puzzle are not in the correct position

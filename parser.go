@@ -44,10 +44,29 @@ func create_number_slice(lines []string, n int) []int {
 	return numbers
 }
 
-func check_numbers(numbers []int) {
+func check_numbers(numbers []int, n int) {
+	inversions := 0
+	blank_position := 0
+
 	copiedNumbers := make([]int, len(numbers))
 	copy(copiedNumbers, numbers)
 
+	for i := range copiedNumbers {
+		for j := range copiedNumbers {
+			if copiedNumbers[i] == 0 {
+				blank_position = (i - (i%n)/n)
+			}
+			if i+j < len(copiedNumbers) &&
+				copiedNumbers[i] != 0 &&
+				copiedNumbers[i+j] != 0 &&
+				copiedNumbers[i] > copiedNumbers[j+i] {
+				inversions++
+			}
+		}
+	}
+	if (inversions+blank_position+n)%2 == 1 {
+		check(errors.New("# This puzzle is unsolvable"))
+	}
 	sort.Slice(copiedNumbers, func(i, j int) bool {
 		return copiedNumbers[i] < copiedNumbers[j]
 	})
@@ -74,7 +93,7 @@ func parser(filename string) ([]int, int, []point) {
 	n, err := strconv.Atoi(lines[0]) // get n (width/height of puzzle)
 	check(err)
 	numbers := create_number_slice(lines[1:], n) // create slice with all numbers
-	check_numbers(numbers)
+	check_numbers(numbers, n)
 
 	return numbers, n, create_goal_map(n)
 }
