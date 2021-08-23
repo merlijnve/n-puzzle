@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 	"sort"
 	"strconv"
@@ -44,29 +45,44 @@ func create_number_slice(lines []string, n int) []int {
 	return numbers
 }
 
-func check_numbers(numbers []int, n int) {
+func goal_map_to_array(goal []point, n int) []int {
+	var numbers = make([]int, n*n)
+
+	for i := range goal {
+		numbers[goal[i].x+(n*goal[i].y)] = i
+	}
+	fmt.Println("NUMBErs:", numbers)
+	return numbers
+}
+
+func calc_inversion(numbers []int, n int) int {
 	inversions := 0
-	blank_position := 0
 
-	copiedNumbers := make([]int, len(numbers))
-	copy(copiedNumbers, numbers)
-
-	for i := range copiedNumbers {
-		for j := range copiedNumbers {
-			if copiedNumbers[i] == 0 {
-				blank_position = (i - (i%n)/n)
-			}
-			if i+j < len(copiedNumbers) &&
-				copiedNumbers[i] != 0 &&
-				copiedNumbers[i+j] != 0 &&
-				copiedNumbers[i] > copiedNumbers[j+i] {
+	for i := range numbers {
+		for j := range numbers {
+			if i+j < len(numbers) &&
+				numbers[i] != 0 &&
+				numbers[i+j] != 0 &&
+				numbers[i] > numbers[j+i] {
 				inversions++
 			}
 		}
 	}
-	if (inversions+blank_position+n)%2 == 1 {
-		check(errors.New("# This puzzle is unsolvable"))
+	return inversions
+}
+
+func check_inversion(numbers []int, n int, goal []point) {
+	goal_inversions := calc_inversion(goal_map_to_array(goal, n), n)
+
+	if calc_inversion(numbers, n)%2 != (goal_inversions+((n+1)%2))%2 {
+		check(errors.New("Unsolvable"))
 	}
+}
+
+func check_numbers(numbers []int, n int) {
+	copiedNumbers := make([]int, len(numbers))
+	copy(copiedNumbers, numbers)
+
 	sort.Slice(copiedNumbers, func(i, j int) bool {
 		return copiedNumbers[i] < copiedNumbers[j]
 	})
@@ -94,6 +110,7 @@ func parser(filename string) ([]int, int, []point) {
 	check(err)
 	numbers := create_number_slice(lines[1:], n) // create slice with all numbers
 	check_numbers(numbers, n)
-
-	return numbers, n, create_goal_map(n)
+	goal := create_goal_map(n)
+	check_inversion(numbers, n, goal)
+	return numbers, n, goal
 }

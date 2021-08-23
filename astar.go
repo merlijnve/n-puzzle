@@ -2,34 +2,40 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type node struct {
-	heurValue int
-	toStart   int
-	total     int
-	state     []int
-	move      string
-	parent    *node
+	heurValue  int
+	toStart    int
+	total      int
+	state      []int
+	move       string
+	parent     *node
+	leftChild  *node
+	rightChild *node
+	tried      bool
 }
 
-func remove(s []node, i int) []node {
-	s[i] = s[len(s)-1]
-	return s[:len(s)-1]
-}
+func move_lowest_to_closed(open map[string]node, closed map[string]node, root *node) node {
+	var key_of_lowest string
 
-func move_lowest_to_closed(open []node, closed []node) ([]node, []node, node) {
-	index_of_lowest := 0
-
-	for i := range open {
-		if open[i].total < open[index_of_lowest].total {
-			index_of_lowest = i
-		}
+	for root.leftChild != nil {
+		root = root.leftChild
+		if ()
 	}
-	closed = append(closed, open[index_of_lowest])
-	tmp := open[index_of_lowest]
-	open = remove(open, index_of_lowest)
-	return open, closed, tmp
+	// for key, value := range open {
+	// 	if key_of_lowest == "" {
+	// 		key_of_lowest = key
+	// 	}
+	// 	if value.total < open[key_of_lowest].total {
+	// 		key_of_lowest = key
+	// 	}
+	// }
+	closed[key_of_lowest] = open[key_of_lowest]
+	tmp := closed[key_of_lowest]
+	delete(open, key_of_lowest)
+	return tmp
 }
 
 func calc_to_start(current node) int {
@@ -46,30 +52,30 @@ func get_successors(current node, n int, heur func([]int, int, []point) int, goa
 
 	upState := up(current.state, n)
 	if upState != nil {
-		heurVal := heur(upState, n, goal)
+		heurVal := heur(upState, n, goal) * 2
 		toStart := calc_to_start(current)
-		successors = append(successors, node{heurVal, toStart, heurVal + toStart, upState, "UP", &current})
+		successors = append(successors, node{heurVal, toStart, heurVal + toStart, upState, "UP", &current, nil, nil, false})
 	}
 
 	downState := down(current.state, n)
 	if downState != nil {
-		heurVal := heur(downState, n, goal)
+		heurVal := heur(downState, n, goal) * 2
 		toStart := calc_to_start(current)
-		successors = append(successors, node{heurVal, toStart, heurVal + toStart, downState, "DOWN", &current})
+		successors = append(successors, node{heurVal, toStart, heurVal + toStart, downState, "DOWN", &current, nil, nil, false})
 	}
 
 	leftState := left(current.state, n)
 	if leftState != nil {
-		heurVal := heur(leftState, n, goal)
+		heurVal := heur(leftState, n, goal) * 2
 		toStart := calc_to_start(current)
-		successors = append(successors, node{heurVal, toStart, heurVal + toStart, leftState, "LEFT", &current})
+		successors = append(successors, node{heurVal, toStart, heurVal + toStart, leftState, "LEFT", &current, nil, nil, false})
 	}
 
 	rightState := right(current.state, n)
 	if rightState != nil {
-		heurVal := heur(rightState, n, goal)
+		heurVal := heur(rightState, n, goal) * 2
 		toStart := calc_to_start(current)
-		successors = append(successors, node{heurVal, toStart, heurVal + toStart, rightState, "RIGHT", &current})
+		successors = append(successors, node{heurVal, toStart, heurVal + toStart, rightState, "RIGHT", &current, nil, nil, false})
 	}
 
 	return successors
@@ -84,6 +90,15 @@ func get_goal_state(goal []point, n int) []int {
 	return goalState
 }
 
+func stateToString(numbers []int, n int) string {
+	var s string
+
+	for i := 0; i < n*n; i++ {
+		s += strconv.Itoa(numbers[i])
+	}
+	return s
+}
+
 func compare_states(current_numbers []int, goal_numbers []int) bool {
 	if len(current_numbers) == 0 {
 		return false
@@ -96,15 +111,14 @@ func compare_states(current_numbers []int, goal_numbers []int) bool {
 	return true
 }
 
-func find_and_compare_states(list []node, current node) bool {
-	// fmt.Println("\nSTART FINDING STATES", len(list))
+func find_and_compare_states(list map[string]node, current node, n int) bool {
 	if len(list) == 0 {
 		return false
 	}
-	for i := range list {
-		if compare_states(list[i].state, current.state) == true && list[i].total < current.total {
-			return true
-		}
+	key := stateToString(current.state, n)
+	_, ok := list[key]
+	if ok == true && list[key].total < current.total {
+		return true
 	}
 	return false
 }
@@ -124,40 +138,67 @@ func recursive_print_moves(n node, moves int) {
 	}
 }
 
+func insertIntoTree(root *node, current *node) *node {
+
+	/* If the tree is empty, return a new node */
+	if root == nil {
+		return current
+	}
+	/* Otherwise, recur down the tree */
+	if current.total < root.total {
+		root.leftChild = insertIntoTree(root.leftChild, current)
+	} else if current.total > root.total {
+		root.rightChild = insertIntoTree(root.rightChild, current)
+	}
+	return root
+}
+
+func print_tree(root *node) {
+	if root != nil {
+		print_tree(root.leftChild)
+		fmt.Printf("%d \n", root.total)
+		print_tree(root.rightChild)
+	}
+}
+
 func astar(numbers []int, n int, heur func([]int, int, []point) int, goal []point) {
-	open := []node{}
-	closed := []node{}
+	open := make(map[string]node)
+	closed := make(map[string]node)
+	// open := []node{}
+	// closed := []node{}
 	node_current := node{}
 	time_complexity := 0
 	size_complexity := 0
 	solution_moves := 0
 
-	node_goal := node{0, 0, 0, get_goal_state(goal, n), "", nil}
-	heur_value := heur(numbers, n, goal)
-	node_start := node{heur_value, 0, heur_value + 0, numbers, "", nil}
-	open = append(open, node_start)
-	for i := 0; len(open) > 0; i++ {
-		// fmt.Println("FINDING LOWEST OF OPEN: ", len(open))
-		open, closed, node_current = move_lowest_to_closed(open, closed)
+	node_goal := node{0, 0, 0, get_goal_state(goal, n), "", nil, nil, nil, false}
+	heur_value := heur(numbers, n, goal) * 2
+	node_start := node{heur_value, 0, heur_value + 0, numbers, "", nil, nil, nil, false}
+	open[stateToString(node_start.state, n)] = node_start
+	for true {
+		node_current = move_lowest_to_closed(open, closed, &node_start)
 		time_complexity++
-		if compare_states(node_current.state, node_goal.state) == true {
+		if stateToString(node_current.state, n) == stateToString(node_goal.state, n) {
 			fmt.Println("Reached solved state")
 			solution_moves = node_current.toStart
 			fmt.Println("Time complexity (nodes selected in open):", time_complexity)
 			fmt.Println("Size complexity (nodes saved in memory):", size_complexity)
 			fmt.Println("Moves to solution:", solution_moves)
+			print_tree(&node_start)
 			recursive_print_moves(node_current, solution_moves+1)
 			return
 		} else {
 			successors := get_successors(node_current, n, heur, goal)
 			for s := range successors {
-				if find_and_compare_states(open, successors[s]) == true ||
-					find_and_compare_states(closed, successors[s]) == true {
+				if find_and_compare_states(closed, successors[s], n) == true ||
+					find_and_compare_states(open, successors[s], n) == true {
 				} else {
-					open = append(open, successors[s])
+					open[stateToString(successors[s].state, n)] = successors[s]
+					insertIntoTree(&node_start, &successors[s])
 				}
 			}
 		}
+		// fmt.Println(time_complexity, size_complexity)
 		if len(open) > size_complexity {
 			size_complexity = len(open)
 		}

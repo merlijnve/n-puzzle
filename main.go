@@ -3,7 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	_ "net/http/pprof"
 	"os"
+
+	"github.com/pkg/profile"
 )
 
 func printpuzzle(numbers []int, n int) {
@@ -23,8 +26,10 @@ func check(err error) {
 }
 
 func main() {
+	defer profile.Start(profile.ProfilePath(".")).Stop()
+
 	argsWithoutProg := os.Args[1:]
-	heur := 0
+	heur := 3
 	var heurFunc func([]int, int, []point) int
 
 	if len(argsWithoutProg) != 1 {
@@ -58,8 +63,4 @@ func main() {
 	numbers, n, goal := parser(os.Args[1])
 
 	astar(numbers, n, heurFunc, goal)
-	// printpuzzle(numbers, n)
-	// fmt.Println("Manhattan: ", manhattan_distance(numbers, n, goal))
-	// fmt.Println("Hamming: ", hamming_distance(numbers, n, goal))
-	// fmt.Println("Manhattan + Linear Conflict: ", md_linear_conflict(numbers, n, goal))
 }
