@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"os"
 	"sort"
 	"strconv"
@@ -51,7 +50,6 @@ func goal_map_to_array(goal []point, n int) []int {
 	for i := range goal {
 		numbers[goal[i].x+(n*goal[i].y)] = i
 	}
-	fmt.Println("NUMBErs:", numbers)
 	return numbers
 }
 
@@ -73,8 +71,18 @@ func calc_inversion(numbers []int, n int) int {
 
 func check_inversion(numbers []int, n int, goal []point) {
 	goal_inversions := calc_inversion(goal_map_to_array(goal, n), n)
+	start_inversions := calc_inversion(numbers, n)
+	pos_of_blank := goal[0].x + (n * goal[0].y)
 
-	if calc_inversion(numbers, n)%2 != (goal_inversions+((n+1)%2))%2 {
+	if n%2 == 0 {
+		goal_inversions += pos_of_blank
+		for i := range numbers {
+			if numbers[i] == 0 {
+				start_inversions += i
+			}
+		}
+	}
+	if start_inversions%2 != goal_inversions%2 {
 		check(errors.New("Unsolvable"))
 	}
 }
