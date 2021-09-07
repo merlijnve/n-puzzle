@@ -3,10 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	_ "net/http/pprof"
 	"os"
-
-	"github.com/pkg/profile"
 )
 
 func printpuzzle(numbers []int, n int) {
@@ -26,7 +23,6 @@ func check(err error) {
 }
 
 func main() {
-	defer profile.Start(profile.ProfilePath(".")).Stop()
 
 	argsWithoutProg := os.Args[1:]
 	heur := 3
