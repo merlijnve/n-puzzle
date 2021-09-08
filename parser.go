@@ -7,6 +7,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"fmt"
+	"math/rand"
+	"time"
 )
 
 // Check if line is empty,
@@ -102,23 +105,61 @@ func check_numbers(numbers []int, n int) {
 
 }
 
-func parser(filename string) ([]int, int, []point) {
-	lines := []string{}
+func create_random_puzzle(filename string) ([]int, int, []point) {
+	n, err := strconv.Atoi(filename[1:])
+	
+	if err != nil {
+		check(errors.New("Incorrect size for randomized puzzle"))
+	}
+	tmp := make([]int, n)
 
-	file, err := os.Open(filename) // open file
-	check(err)
-	scanner := bufio.NewScanner(file) // create new scanner
-	for scanner.Scan() {              // scan line until done
-		str := clean_line(scanner.Text())
-		if str != "" {
-			lines = append(lines, str) // add line to 'lines' slice
+	goal := create_goal_map(n)
+	numbers := goal_map_to_array(goal, n)
+	rand.Seed(time.Now().UnixNano())
+	fmt.Println("Generated puzzle with n =", n)
+	for i:=0 ; i < 1000; i++ {
+		randnum := rand.Int() % 4 
+		switch randnum {
+		case 0:
+			tmp = up(numbers, n)
+		case 1:
+			tmp = down(numbers, n)
+		case 2:
+			tmp = left(numbers, n)
+		case 3:
+			tmp = right(numbers, n)
+		}
+		if tmp != nil {
+			numbers = tmp
 		}
 	}
-	n, err := strconv.Atoi(lines[0]) // get n (width/height of puzzle)
-	check(err)
-	numbers := create_number_slice(lines[1:], n) // create slice with all numbers
-	check_numbers(numbers, n)
-	goal := create_goal_map(n)
-	check_inversion(numbers, n, goal)
+	print_puzzle(numbers, n)
+	return numbers, n, goal
+}
+
+func parser(filename string) ([]int, int, []point) {
+	lines := []string{}
+	n := 0
+	numbers := make([]int, 1)
+
+	if filename[0] != '+' {
+		file, err := os.Open(filename) // open file
+		check(err)
+		scanner := bufio.NewScanner(file) // create new scanner
+		for scanner.Scan() {              // scan line until done
+			str := clean_line(scanner.Text())
+			if str != "" {
+				lines = append(lines, str) // add line to 'lines' slice
+			}
+		}
+		n, err := strconv.Atoi(lines[0]) // get n (width/height of puzzle)
+		check(err)
+		numbers = create_number_slice(lines[1:], n) // create slice with all numbers
+		check_numbers(numbers, n)
+		goal := create_goal_map(n)
+		check_inversion(numbers, n, goal)
+		return numbers, n, goal
+	}
+	numbers, n, goal := create_random_puzzle(filename)
 	return numbers, n, goal
 }
