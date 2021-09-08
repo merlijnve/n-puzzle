@@ -6,9 +6,9 @@ import (
 	"os"
 )
 
-func printpuzzle(numbers []int, n int) {
+func print_puzzle(numbers []int, n int) {
 	for i := range numbers {
-		fmt.Printf("%v[%v]\t", calculate_coordinate(i, n), numbers[i])
+		fmt.Printf("[%v]\t", numbers[i])
 		if (i+1)%n == 0 {
 			fmt.Printf("\n\n")
 		}
@@ -22,41 +22,35 @@ func check(err error) {
 	}
 }
 
-func main() {
+func usage() {
+	check(errors.New("Usage:\n./npuzzle [filename or +3 for random with n=3] [heuristic]\n\nHeuristics to choose from:\n[md] Manhattan Distance\n[hd] Hamming Distance\n[mdlc] Manhattan Distance + Linear Conflict\n[all] All combined (extra but inadmissible)"))
+}
 
+func main() {
 	argsWithoutProg := os.Args[1:]
-	heur := 3
 	var heurFunc func([]int, int, []point) int
 
-	if len(argsWithoutProg) != 1 {
-		if len(argsWithoutProg) == 0 {
-			check(errors.New("Please give a filename as argument"))
-		} else {
-			check(errors.New("Please give only 1 filename as argument"))
-		}
+	if len(argsWithoutProg) != 2 {
+		usage()
 	} else {
-		for heur != 1 && heur != 2 && heur != 3 && heur != 4 {
-			fmt.Println("Select a heuristic function & press enter:")
-			fmt.Println("[1] Manhattan Distance")
-			fmt.Println("[2] Hamming Distance")
-			fmt.Println("[3] Manhattan Distance + Linear Confict")
-			fmt.Scanf("%v", &heur)
-			if heur != 1 && heur != 2 && heur != 3 {
-				fmt.Println("That's not an option")
-			}
+		switch argsWithoutProg[1] {
+		case "md":
+			heurFunc = manhattan_distance
+			fmt.Println("Solving with Manhattan Distance heuristic")
+		case "hd":
+			fmt.Println("Solving with Hamming Distance heuristic")
+			heurFunc = hamming_distance
+		case "mdlc":
+			heurFunc = md_linear_conflict
+			fmt.Println("Solving with Manhattan Distance + Linear Conflict heuristic")
+		case "all":
+			heurFunc = all_combined
+			fmt.Println("Solving with all heuristics combined (inadmissible)")
 		}
-	}
-	switch heur {
-	case 1:
-		heurFunc = manhattan_distance
-	case 2:
-		heurFunc = hamming_distance
-	case 3:
-		heurFunc = md_linear_conflict
-	case 4:
-		heurFunc = all_combined
+		if heurFunc == nil {
+			usage()
+		}
 	}
 	numbers, n, goal := parser(os.Args[1])
-
 	astar(numbers, n, heurFunc, goal)
 }
