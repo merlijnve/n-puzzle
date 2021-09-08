@@ -136,7 +136,6 @@ func astar(numbers []int, n int, heur func([]int, int, []point) int, goal []poin
 	time_complexity := 0
 	size_complexity := 0
 	solution_moves := 0
-	var node_start *node
 
 	node_goal := Node{0, 0, 0, goal_map_to_array(goal, n), "", nil, 0}
 	heur_value := heur(numbers, n, goal) * 2
